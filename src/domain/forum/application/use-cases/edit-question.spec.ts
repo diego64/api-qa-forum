@@ -49,8 +49,8 @@ describe('Edit Question', () => {
       return sut.execute({
         questionId: newQuestion.id.toValue(),
         authorId: 'author-2',
-        title: 'Pergunta teste',
-        content: 'Conteúdo teste',
+        title: 'Test question',
+        content: 'Test content',
       })
     }).rejects.toBeInstanceOf(Error)
   })
