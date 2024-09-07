@@ -1,50 +1,56 @@
 import { AnswersRepository } from '../repositories/answers-repository'
-import { UniqueEntityID } from '@/core/entities/unique-entity-id'
-import { AnswerComment } from '@/domain/forum/enterprise/entities/answer-comment'
-import { AnswerCommentsRepository } from '@/domain/forum/application/repositories/answer-comments-repository'
+import { Question } from '@/domain/forum/enterprise/entities/question'
+import { QuestionsRepository } from '@/domain/forum/application/repositories/questions-repository'
 import { Either, left, right } from '@/core/either'
 import { ResourceNotFoundError } from '@/domain/forum/application/use-cases/errors/resource-not-found-error'
+import { NotAllowedError } from '@/domain/forum/application/use-cases/errors/not-allowed-error'
 
-interface CommentOnAnswerUseCaseRequest {
+interface ChooseQuestionBestAnswerUseCaseRequest {
   authorId: string
   answerId: string
-  content: string
 }
 
-type CommentOnAnswerUseCaseResponse = Either<
-  ResourceNotFoundError,
+type ChooseQuestionBestAnswerUseCaseResponse = Either<
+  ResourceNotFoundError | NotAllowedError,
   {
-    answerComment: AnswerComment
+    question: Question
   }
 >
 
-export class CommentOnAnswerUseCase {
+export class ChooseQuestionBestAnswerUseCase {
   constructor(
+    private questionsRepository: QuestionsRepository,
     private answersRepository: AnswersRepository,
-    private answerCommentsRepository: AnswerCommentsRepository,
   ) {}
 
   async execute({
-    authorId,
     answerId,
-    content,
-  }: CommentOnAnswerUseCaseRequest): Promise<CommentOnAnswerUseCaseResponse> {
+    authorId,
+  }: ChooseQuestionBestAnswerUseCaseRequest): Promise<ChooseQuestionBestAnswerUseCaseResponse> {
     const answer = await this.answersRepository.findById(answerId)
 
     if (!answer) {
       return left(new ResourceNotFoundError())
     }
 
-    const answerComment = AnswerComment.create({
-      authorId: new UniqueEntityID(authorId),
-      answerId: new UniqueEntityID(answerId),
-      content,
-    })
+    const question = await this.questionsRepository.findById(
+      answer.questionId.toString(),
+    )
 
-    await this.answerCommentsRepository.create(answerComment)
+    if (!question) {
+      return left(new ResourceNotFoundError())
+    }
+
+    if (authorId !== question.authorId.toString()) {
+      return left(new NotAllowedError())
+    }
+
+    question.bestAnswerId = answer.id
+
+    await this.questionsRepository.save(question)
 
     return right({
-      answerComment,
+      question,
     })
   }
 }
