@@ -1,5 +1,8 @@
+// biome-ignore lint/style/useImportType: <explanation>
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
+// biome-ignore lint/style/useImportType: <explanation>
 import { Optional } from '@/core/types/optional'
+// biome-ignore lint/style/useImportType: <explanation>
 import { Comment, CommentProps } from './comment'
 
 export interface QuestionCommentProps extends CommentProps {
