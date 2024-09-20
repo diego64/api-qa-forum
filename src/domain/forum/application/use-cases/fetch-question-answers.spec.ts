@@ -1,58 +1,62 @@
+import { InMemoryAnswersRepository } from 'test/repositories/in-memory-answers-repository'
+import { FetchQuestionAnswersUseCase } from '@/domain/forum/application/use-cases/fetch-question-answers'
+import { makeAnswer } from 'test/factories/make-answer'
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
-import { InMemoryAnswerCommentsRepository } from 'test/repositories/in-memory-answer-comments-repository'
-import { FetchAnswerCommentsUseCase } from '@/domain/forum/application/use-cases/fetch-answer-comments'
-import { makeAnswerComment } from 'test/factories/make-answer-comment'
+import { InMemoryAnswerAttachmentsRepository } from 'test/repositories/in-memory-answer-attachments-repository'
 
-let inMemoryAnswerCommentsRepository: InMemoryAnswerCommentsRepository
-let sut: FetchAnswerCommentsUseCase
+let inMemoryAnswerAttachmentsRepository: InMemoryAnswerAttachmentsRepository
+let inMemoryAnswersRepository: InMemoryAnswersRepository
+let sut: FetchQuestionAnswersUseCase
 
-describe('Fetch Answer Comments', () => {
+describe('Fetch Question Answers', () => {
   beforeEach(() => {
-    inMemoryAnswerCommentsRepository = new InMemoryAnswerCommentsRepository()
-    sut = new FetchAnswerCommentsUseCase(inMemoryAnswerCommentsRepository)
+    inMemoryAnswerAttachmentsRepository =
+      new InMemoryAnswerAttachmentsRepository()
+    inMemoryAnswersRepository = new InMemoryAnswersRepository(
+      inMemoryAnswerAttachmentsRepository,
+    )
+    sut = new FetchQuestionAnswersUseCase(inMemoryAnswersRepository)
   })
 
-  it('should be able to fetch answer comments', async () => {
-    await inMemoryAnswerCommentsRepository.create(
-      makeAnswerComment({
-        answerId: new UniqueEntityID('answer-1'),
+  it('should be able to fetch question answers', async () => {
+    await inMemoryAnswersRepository.create(
+      makeAnswer({
+        questionId: new UniqueEntityID('question-1'),
       }),
     )
-
-    await inMemoryAnswerCommentsRepository.create(
-      makeAnswerComment({
-        answerId: new UniqueEntityID('answer-1'),
+    await inMemoryAnswersRepository.create(
+      makeAnswer({
+        questionId: new UniqueEntityID('question-1'),
       }),
     )
-
-    await inMemoryAnswerCommentsRepository.create(
-      makeAnswerComment({
-        answerId: new UniqueEntityID('answer-1'),
+    await inMemoryAnswersRepository.create(
+      makeAnswer({
+        questionId: new UniqueEntityID('question-1'),
       }),
     )
 
     const result = await sut.execute({
-      answerId: 'answer-1',
+      questionId: 'question-1',
       page: 1,
     })
 
-    expect(result.value?.answerComments).toHaveLength(3)
+    expect(result.value?.answers).toHaveLength(3)
   })
 
-  it('should be able to fetch paginated answer comments', async () => {
+  it('should be able to fetch paginated question answers', async () => {
     for (let i = 1; i <= 22; i++) {
-      await inMemoryAnswerCommentsRepository.create(
-        makeAnswerComment({
-          answerId: new UniqueEntityID('answer-1'),
+      await inMemoryAnswersRepository.create(
+        makeAnswer({
+          questionId: new UniqueEntityID('question-1'),
         }),
       )
     }
 
     const result = await sut.execute({
-      answerId: 'answer-1',
+      questionId: 'question-1',
       page: 2,
     })
 
-    expect(result.value?.answerComments).toHaveLength(2)
+    expect(result.value?.answers).toHaveLength(2)
   })
 })
