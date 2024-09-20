@@ -48,12 +48,12 @@ describe('Edit Answer', () => {
     await sut.execute({
       answerId: newAnswer.id.toValue(),
       authorId: 'author-1',
-      content: 'Conteúdo teste',
+      content: 'Test content',
       attachmentsIds: ['1', '3'],
     })
 
     expect(inMemoryAnswersRepository.items[0]).toMatchObject({
-      content: 'Conteúdo teste',
+      content: 'Test content',
     })
 
     expect(
